@@ -1,6 +1,9 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:try_space/Utilities/Auth.dart';
+import 'package:try_space/Providers/UserProvider.dart';
+import 'package:provider/provider.dart';
+import 'package:try_space/Models/UserModel.dart';
+
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -53,47 +56,52 @@ Future<void> _register() async {
       SnackBar(content: Text('Registering $name...')),
     );
     try {
-      await _auth
-          .signUpWithEmail(
+      final user = await _auth.signUpWithEmail(
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
-      User? user = await _auth.signUpWithEmail(_emailController.text.trim(),
-        _passwordController.text.trim());
 
       if (user != null) {
-  
-}
-      // ✅ Show confirmation dialog
-      showDialog(
-        context: context,
-        barrierDismissible: false, // Force user to press OK
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text("Success"),
-            content: Text("Account created successfully!"),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); // Close the dialog
-                  Navigator.pushReplacementNamed(context, '/login'); // Navigate to login screen
-                },
-                child: Text("OK"),
-              ),
-            ],
-          );
-        },
-      );
-    } catch (e) {
-      setState(() {
-        // Optional: show error with SnackBar
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
+        // Create UserModel without profileImageUrl for now (empty string or default)
+        final newUser = UserModel(
+          uid: user.uid,
+          name: name,
+          email: user.email ?? '',
+          profileImageUrl: '',
         );
-      });
+
+        // Save user data to Firestore using Provider
+        await Provider.of<UserProvider>(context, listen: false).addUserToFirestore(newUser);
+
+        // Show success dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text("Success"),
+              content: Text("Account created successfully!"),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close dialog
+                    Navigator.pushReplacementNamed(context, '/login');
+                  },
+                  child: Text("OK"),
+                ),
+              ],
+            );
+          },
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
     }
   }
 }
+
 
   @override
   Widget build(BuildContext context) {

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:try_space/Utilities/Auth.dart';
-import 'dart:io';
+import 'dart:io' show File;
 import 'package:image_picker/image_picker.dart';
+import 'package:try_space/src/Screens/ResultScreen.dart';
+import 'package:try_space/Utilities/Palette.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -12,37 +14,18 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final ImagePicker _picker = ImagePicker();
-    final Auth _auth = Auth();
+  final Auth _auth = Auth();
   File? _userImage;
   File? _garmentImage;
   bool _isProcessing = false;
+  int _selectedIndex = 0;
   int _currentIndex = 0;
 
-  final List<List<Color>> vibrantGradients = [
-    [Color(0xFFFF5F6D), Color(0xFFFFC371)], // Red to orange
-    [Color(0xFF36D1DC), Color(0xFF5B86E5)], // Turquoise to blue
-    [
-      Color.fromARGB(255, 2, 64, 45),
-      Color.fromARGB(255, 23, 237, 173),
-    ], // Green to Black
+  // Define the gradient colors
+  final List<Color> gradientColors = const [
+    Color(0xFFFF5F6D),
+    Color(0xFFFFC371),
   ];
-  int _gradientIndex = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _startGradientAnimation();
-  }
-
-  void _startGradientAnimation() {
-    Future.delayed(const Duration(seconds: 3), () {
-      if (!mounted) return;
-      setState(() {
-        _gradientIndex = (_gradientIndex + 1) % vibrantGradients.length;
-      });
-      _startGradientAnimation();
-    });
-  }
 
   Future<void> _selectUserImage() async {
     showModalBottomSheet(
@@ -170,13 +153,21 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Try-Space'),
+        title: const Text('Dashboard', style: TextStyle(color: Colors.white)),
         centerTitle: true,
-        backgroundColor: const Color(0xFF2A86E3),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: gradientColors,
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+          ),
+        ),
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.history),
+            icon: const Icon(Icons.history, color: Colors.white),
             onPressed: () {
               // Navigate to history screen
             },
@@ -193,7 +184,13 @@ class _HomePageState extends State<HomePage> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(20),
-                  color: const Color(0xFF2A86E3),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: gradientColors,
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                  ),
                   child: const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -256,11 +253,19 @@ class _HomePageState extends State<HomePage> {
                   child: ElevatedButton(
                     onPressed: _isProcessing ? null : _processImages,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2A86E3),
                       padding: const EdgeInsets.symmetric(vertical: 15),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
+                    ).copyWith(
+                      backgroundColor: MaterialStateProperty.resolveWith<
+                        Color
+                      >((Set<MaterialState> states) {
+                        if (states.contains(MaterialState.disabled)) {
+                          return Colors.grey;
+                        }
+                        return gradientColors[0]; // Using the first color from gradient
+                      }),
                     ),
                     child:
                         _isProcessing
@@ -277,6 +282,7 @@ class _HomePageState extends State<HomePage> {
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
+                                color: Colors.white,
                               ),
                             ),
                   ),
@@ -285,7 +291,7 @@ class _HomePageState extends State<HomePage> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Text(
-                    'Popular Categories',
+                    'Recents',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -300,11 +306,11 @@ class _HomePageState extends State<HomePage> {
                     padding: const EdgeInsets.symmetric(horizontal: 15),
                     scrollDirection: Axis.horizontal,
                     children: [
-                      _buildCategoryCard('T-Shirts', Icons.checkroom),
-                      _buildCategoryCard('Dresses', Icons.checkroom),
-                      _buildCategoryCard('Jackets', Icons.checkroom),
-                      _buildCategoryCard('Pants', Icons.checkroom),
-                      _buildCategoryCard('Shoes', Icons.checkroom),
+                      _buildCategoryCard('Try-On 1', Icons.checkroom),
+                      _buildCategoryCard('Try-On 1', Icons.checkroom),
+                      _buildCategoryCard('Try-On 1', Icons.checkroom),
+                      _buildCategoryCard('Try-On 1', Icons.checkroom),
+                      _buildCategoryCard('Try-On 1', Icons.checkroom),
                     ],
                   ),
                 ),
@@ -315,9 +321,15 @@ class _HomePageState extends State<HomePage> {
 
           // Explore tab (placeholder)
           Center(
-            child: Text(
-              'Explore',
-              style: TextStyle(fontSize: 24, color: Colors.grey[600]),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Comparison',
+                  style: TextStyle(fontSize: 24, color: Colors.grey[600]),
+                ),
+                SizedBox(height: 20),
+              ],
             ),
           ),
 
@@ -340,12 +352,34 @@ class _HomePageState extends State<HomePage> {
                 ),
                 SizedBox(height: 20),
                 ElevatedButton(
+                  onPressed: () {
+                    // Handle edit profile action here
+                    Navigator.pushNamed(
+                      context,
+                      '/editprofile',
+                    ); // example navigation
+                  },
+                  child: const Text(
+                    'Edit Profile',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+
+                SizedBox(height: 10), // Add some space between buttons
+
+                ElevatedButton(
                   onPressed: () async {
                     await _auth.signOut();
-                    // Optional: Navigate to login screen
                     Navigator.pushReplacementNamed(context, '/login');
                   },
-                  child: Text('Sign Out'),
+                  child: const Text(
+                    'Sign Out',
+                    style: TextStyle(color: Colors.white),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,
                     foregroundColor: Colors.white,
@@ -364,11 +398,14 @@ class _HomePageState extends State<HomePage> {
           });
         },
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF2A86E3),
+        selectedItemColor: gradientColors[0],
         unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Explore'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.compare),
+            label: 'Comparison',
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.favorite_border),
             label: 'Favorites',
@@ -393,7 +430,7 @@ class _HomePageState extends State<HomePage> {
           color: Colors.grey[200],
           borderRadius: BorderRadius.circular(15),
           border: Border.all(
-            color: image != null ? const Color(0xFF2A86E3) : Colors.grey[300]!,
+            color: image != null ? gradientColors[0] : Colors.grey[300]!,
             width: image != null ? 2 : 1,
           ),
         ),
@@ -442,7 +479,7 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 35, color: const Color(0xFF2A86E3)),
+          Icon(icon, size: 35, color: gradientColors[0]),
           const SizedBox(height: 10),
           Text(
             title,
@@ -452,114 +489,15 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-}
 
-// Result Screen to show the virtual try-on result
-class ResultScreen extends StatelessWidget {
-  final File userImage;
-  final File garmentImage;
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
 
-  const ResultScreen({
-    super.key,
-    required this.userImage,
-    required this.garmentImage,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    // In a real app, this would show the processed image from backend
-    // For this demo, we'll just show the garment image as a placeholder
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Your Try-On Result'),
-        centerTitle: true,
-        backgroundColor: const Color(0xFF2A86E3),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Container(
-              width: double.infinity,
-              margin: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(15),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.5),
-                    spreadRadius: 2,
-                    blurRadius: 7,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(15),
-                // In a real app, this would be the processed result image
-                // For demo purposes, showing the garment image
-                child: Image.file(garmentImage, fit: BoxFit.cover),
-              ),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          // Save image functionality
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Image saved to gallery'),
-                              backgroundColor: Colors.green,
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.save_alt),
-                        label: const Text('Save'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2A86E3),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 15),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          // Share functionality
-                        },
-                        icon: const Icon(Icons.share),
-                        label: const Text('Share'),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          side: const BorderSide(color: Color(0xFF2A86E3)),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 15),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFF2A86E3),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    side: const BorderSide(color: Color(0xFF2A86E3)),
-                  ),
-                  child: const Text('Try Another Item'),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+    if (index == 1) {
+      // Assuming 'Comparison' is at index 1
+      Navigator.pushNamed(context, '/comparison');
+    }
   }
 }

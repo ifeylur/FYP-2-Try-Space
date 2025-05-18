@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:try_space/Utilities/Auth.dart';
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -17,7 +18,10 @@ class _LoginPageState extends State<LoginPage> {
   final List<List<Color>> vibrantGradients = [
     [Color(0xFFFF5F6D), Color(0xFFFFC371)], // Red to orange
     [Color(0xFF36D1DC), Color(0xFF5B86E5)], // Turquoise to blue
-    [Color.fromARGB(255,2,64,45), Color.fromARGB(255,23,237,173)], // Green to Black
+    [
+      Color.fromARGB(255, 2, 64, 45),
+      Color.fromARGB(255, 23, 237, 173),
+    ], // Green to Black
   ];
   int _gradientIndex = 0;
 
@@ -45,26 +49,32 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _signIn() async {
     if (_formKey.currentState!.validate()) {
-      final email = _emailController.text;
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
+
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Signing in with $email...')));
-    }
-    try {
-      await _auth.signInWithEmailAndPassword(
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
-      );
-      // Navigate to home page after successful login
-      Navigator.pushReplacementNamed(context, '/home');
-      print('HomePage IS not found');
-    } catch (e) {
-      setState(() {
-        e.toString();
-      });
+
+      try {
+        final user = await _auth.signInWithEmailAndPassword(email, password);
+
+        if (user != null) {
+          // Navigate to home page after successful login
+          Navigator.pushReplacementNamed(context, '/home');
+        } else {
+          // Invalid credentials
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Invalid email or password')));
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('An error occurred: ${e.toString()}')),
+        );
+      }
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -195,8 +205,7 @@ class _LoginPageState extends State<LoginPage> {
                         onTap: () async {
                           final user = await Auth().signInWithGoogle();
                           if (user != null) {
-                            Navigator.pushReplacementNamed(
-                              context, '/home');
+                            Navigator.pushReplacementNamed(context, '/home');
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text('Google sign-in failed')),
@@ -206,18 +215,13 @@ class _LoginPageState extends State<LoginPage> {
                         child: _socialButton('assets/google.png'),
                       ),
                       SizedBox(width: 10),
-                      _socialButton('assets/facebook.png'),
-                      SizedBox(width: 10),
-                      _socialButton('assets/apple.png'),
                     ],
                   ),
 
                   const SizedBox(height: 30),
                   TextButton(
                     onPressed: () {
-                      Navigator.pushReplacementNamed(
-                        context,'/signup'
-                      );
+                      Navigator.pushReplacementNamed(context, '/signup');
                     },
                     child: const Text(
                       "Don't have an account? Sign Up",

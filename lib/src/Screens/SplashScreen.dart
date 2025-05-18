@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:try_space/Utilities/Auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -64,17 +65,20 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
   Future<void> _navigateAfterSplash() async {
     await Future.delayed(const Duration(seconds: 2));
+
     final user = _auth.getCurrentUser();
 
     if (user != null /* && user.emailVerified */) {
-      Navigator.pushReplacementNamed(
-        context,'/home');
+      // User is actually signed in — navigate to marketplace
+      Navigator.pushReplacementNamed(context, '/home');
     } else {
-      Navigator.pushReplacementNamed(
-        context,'/login'
-      );
-    }
-  }
+      // Clear shared pref just in case it's stale
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('isLoggedIn', false);
+
+      Navigator.pushReplacementNamed(context, '/register');
+}
+}
   
 
   @override
