@@ -15,7 +15,11 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
   File? _secondImage;
   bool _showResult = false;
 
-  int _selectedIndex = 1;
+
+  final List<Color> gradientColors = const [
+    Color(0xFFFF5F6D),
+    Color(0xFFFFC371),
+  ];
 
   Future<void> _pickImage(bool isFirst) async {
     final pickedFile =
@@ -44,134 +48,186 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
     }
   }
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-
-    switch (index) {
-      case 0:
-        Navigator.pushReplacementNamed(context, '/home');
-        break;
-      case 1:
-      // Already on compare screen
-        break;
-      case 2:
-        Navigator.pushReplacementNamed(context, '/favorites');
-        break;
-      case 3:
-        Navigator.pushReplacementNamed(context, '/profile');
-        break;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Compare Outfits"),
-        backgroundColor: const Color(0xFF2A86E3),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            const Text(
-              "Upload Two Images to Compare",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        title: const Text("Compare Outfits",style: TextStyle(color: Colors.white),),
+        centerTitle: true,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: gradientColors,
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
             ),
-            const SizedBox(height: 20),
-
-            // First image picker
-            GestureDetector(
-              onTap: () => _pickImage(true),
-              child: Container(
-                height: 180,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  color: Colors.grey[100],
-                ),
-                child: _firstImage != null
-                    ? Image.file(_firstImage!, fit: BoxFit.cover)
-                    : const Center(child: Text("Tap to select first image")),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Second image picker
-            GestureDetector(
-              onTap: () => _pickImage(false),
-              child: Container(
-                height: 180,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  color: Colors.grey[100],
-                ),
-                child: _secondImage != null
-                    ? Image.file(_secondImage!, fit: BoxFit.cover)
-                    : const Center(child: Text("Tap to select second image")),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            ElevatedButton(
-              onPressed: _onTryOnPressed,
-              child: const Text("Try On"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2A86E3),
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            // Result section
-            if (_showResult)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Comparison Result",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _firstImage != null
-                            ? Image.file(_firstImage!)
-                            : const SizedBox(),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _secondImage != null
-                            ? Image.file(_secondImage!)
-                            : const SizedBox(),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    "This is a basic visual comparison. AI styling suggestions will be added soon.",
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ],
-              ),
-          ],
+          ),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        selectedItemColor: const Color(0xFF2A86E3),
-        unselectedItemColor: Colors.grey,
-        onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.compare), label: 'Try On'),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Favorites'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: gradientColors,
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: Column(
+            children: [
+              const Text(
+                "Upload Two Images to Compare",
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
+              ),
+              const SizedBox(height: 20),
+
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => _pickImage(true),
+                              child: Container(
+                                height: 100,
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(15),
+                                  border: Border.all(color: Colors.white70),
+                                  color: Colors.white.withOpacity(0.2),
+                                ),
+                                child: _firstImage != null
+                                    ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(15),
+                                  child: Image.file(
+                                    _firstImage!,
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                                    : const Center(
+                                  child: Text(
+                                    "Tap to select first image",
+                                    style: TextStyle(color: Colors.white70),
+                                  ),
+                                ),
+                              ),
+                            )
+                          ),
+                          const SizedBox(width: 16), // spacing between images
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => _pickImage(false),
+                              child: Container(
+                                height: 100,
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(15),
+                                  border: Border.all(color: Colors.white70),
+                                  color: Colors.white.withOpacity(0.2),
+                                ),
+                                child: _secondImage != null
+                                    ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(15),
+                                  child: Image.file(
+                                    _secondImage!,
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                                    : const Center(
+                                  child: Text(
+                                    "Tap to select second image",
+                                    style: TextStyle(color: Colors.white70),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Result section (optional)
+                      if (_showResult)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Comparison Result",
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _firstImage != null
+                                      ? Image.file(_firstImage!)
+                                      : const SizedBox(),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: _secondImage != null
+                                      ? Image.file(_secondImage!)
+                                      : const SizedBox(),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            const Text(
+                              "This is a basic visual comparison. AI styling suggestions will be added soon.",
+                              style:
+                              TextStyle(color: Colors.white70, fontSize: 14),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: gradientColors,
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, -3),
+            )
+          ],
+        ),
+        child: ElevatedButton(
+          onPressed: _onTryOnPressed,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: gradientColors[0],
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          child: const Text(
+            "Compare",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
       ),
     );
   }

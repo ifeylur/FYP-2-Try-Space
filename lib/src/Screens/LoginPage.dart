@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:try_space/Utilities/Auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -46,22 +48,37 @@ class _LoginPageState extends State<LoginPage> {
       SnackBar(content: Text('Password reset functionality goes here')),
     );
   }
+  Future<void> handleGoogleSignIn(BuildContext context) async {
+  _showLoadingDialog("Signing you in...");
+  final user = await _auth.signInWithGoogle();
+  if (user != null) {
+    // Important: Use pushAndRemoveUntil to clear the navigation stack
+    Navigator.pushReplacementNamed(context,'/navbar'
+    );
+  } else {
+    // Handle sign-in failure
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Sign in failed. Please try again.')),
+    );
+  }
+}
 
   Future<void> _signIn() async {
     if (_formKey.currentState!.validate()) {
       final email = _emailController.text.trim();
       final password = _passwordController.text.trim();
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Signing in with $email...')));
+      _showLoadingDialog("Signing you in $email..");
 
       try {
         final user = await _auth.signInWithEmailAndPassword(email, password);
 
+        // Close loading dialog
+        Navigator.of(context).pop();
+
         if (user != null) {
           // Navigate to home page after successful login
-          Navigator.pushReplacementNamed(context, '/home');
+          Navigator.pushReplacementNamed(context, '/navbar');
         } else {
           // Invalid credentials
           ScaffoldMessenger.of(
@@ -69,6 +86,9 @@ class _LoginPageState extends State<LoginPage> {
           ).showSnackBar(SnackBar(content: Text('Invalid email or password')));
         }
       } catch (e) {
+        // Close loading dialog
+        Navigator.of(context).pop();
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('An error occurred: ${e.toString()}')),
         );
@@ -203,14 +223,7 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       GestureDetector(
                         onTap: () async {
-                          final user = await Auth().signInWithGoogle();
-                          if (user != null) {
-                            Navigator.pushReplacementNamed(context, '/home');
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Google sign-in failed')),
-                            );
-                          }
+                          await handleGoogleSignIn(context);
                         },
                         child: _socialButton('assets/google.png'),
                       ),
@@ -249,4 +262,26 @@ class _LoginPageState extends State<LoginPage> {
       child: Image.asset(assetPath, fit: BoxFit.contain),
     );
   }
+
+  void _showLoadingDialog(String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (_) => Dialog(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(width: 16),
+                  Flexible(child: Text(message)),
+                ],
+              ),
+            ),
+          ),
+    );
+  }
+  
 }

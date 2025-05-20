@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:try_space/src/Screens/Profile.dart';
+import 'package:try_space/src/Screens/EditProfile.dart';
 import 'package:try_space/src/Screens/RegisterPage.dart';
 import 'package:try_space/src/Screens/ComparisonScreen.dart';
 // import 'package:try_space/src/Screens/ResultScreen.dart';
@@ -7,7 +8,7 @@ import 'package:try_space/src/Screens/ComparisonScreen.dart';
 import 'package:try_space/src/Screens/SignUpPage.dart';
 import 'package:try_space/src/Screens/HomePage.dart';
 import 'package:try_space/src/Screens/LoginPage.dart';
-import 'package:try_space/src/Screens/EditProfile.dart';
+import 'package:try_space/src/Screens/NavBar.dart';
 
 
 class AppRoutes {
@@ -20,6 +21,7 @@ class AppRoutes {
   static const String result = '/result';
   static const String profile = '/profile';
   static const String editprofile = '/editprofile';
+  static const String navbar = '/navbar';
 
 
   static Map<String, WidgetBuilder> routes = {
@@ -30,6 +32,6 @@ class AppRoutes {
     comparison: (context) => ComparisonScreen(),
     profile: (context) => Profile(),
     editprofile: (context) => EditProfile(),
-    // tryon: (context) => TryOnScreen()
+    navbar: (context) => NavBar(),
   };
 }

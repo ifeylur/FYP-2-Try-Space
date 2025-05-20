@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:try_space/Utilities/Auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:try_space/src/Screens/NavBar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -10,12 +12,12 @@ class SplashScreen extends StatefulWidget {
   _SplashScreenState createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
   final Auth _auth = Auth();
-
 
   final List<List<Color>> vibrantGradients = [
     [Color(0xFFFF5F6D), Color(0xFFFFC371)],
@@ -66,20 +68,22 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   Future<void> _navigateAfterSplash() async {
     await Future.delayed(const Duration(seconds: 2));
 
-    final user = _auth.getCurrentUser();
+    final prefs = await SharedPreferences.getInstance();
+    final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
 
-    if (user != null /* && user.emailVerified */) {
-      // User is actually signed in — navigate to marketplace
-      Navigator.pushReplacementNamed(context, '/home');
+    // Wait for Firebase Auth to finish loading the current user
+    final user = await FirebaseAuth.instance.authStateChanges().first;
+
+    if (isLoggedIn && user != null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const NavBar()),
+      );
     } else {
-      // Clear shared pref just in case it's stale
-      final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', false);
-
       Navigator.pushReplacementNamed(context, '/register');
-}
-}
-  
+    }
+  }
 
   @override
   void dispose() {
@@ -121,7 +125,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                               color: Colors.black.withOpacity(0.2),
                               blurRadius: 15,
                               offset: const Offset(0, 5),
-                            )
+                            ),
                           ],
                         ),
                         child: const Center(
@@ -156,7 +160,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                         width: 40,
                         height: 40,
                         child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
                           strokeWidth: 3,
                         ),
                       ),

@@ -3,7 +3,6 @@ import 'package:try_space/Utilities/Auth.dart';
 import 'dart:io' show File;
 import 'package:image_picker/image_picker.dart';
 import 'package:try_space/src/Screens/ResultScreen.dart';
-import 'package:try_space/Utilities/Palette.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,7 +17,6 @@ class _HomePageState extends State<HomePage> {
   File? _userImage;
   File? _garmentImage;
   bool _isProcessing = false;
-  int _selectedIndex = 0;
   int _currentIndex = 0;
 
   // Define the gradient colors
@@ -318,104 +316,10 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
-
-          // Explore tab (placeholder)
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Comparison',
-                  style: TextStyle(fontSize: 24, color: Colors.grey[600]),
-                ),
-                SizedBox(height: 20),
-              ],
-            ),
-          ),
-
-          // Favorites tab (placeholder)
-          Center(
-            child: Text(
-              'Favorites',
-              style: TextStyle(fontSize: 24, color: Colors.grey[600]),
-            ),
-          ),
-
-          // Profile tab (placeholder)
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Profile',
-                  style: TextStyle(fontSize: 24, color: Colors.grey[600]),
-                ),
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    // Handle edit profile action here
-                    Navigator.pushNamed(
-                      context,
-                      '/editprofile',
-                    ); // example navigation
-                  },
-                  child: const Text(
-                    'Edit Profile',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-
-                SizedBox(height: 10), // Add some space between buttons
-
-                ElevatedButton(
-                  onPressed: () async {
-                    await _auth.signOut();
-                    Navigator.pushReplacementNamed(context, '/login');
-                  },
-                  child: const Text(
-                    'Sign Out',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: gradientColors[0],
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.compare),
-            label: 'Comparison',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_border),
-            label: 'Favorites',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
     );
   }
-
   Widget _buildImageSelector(
     String title,
     File? image,
@@ -488,16 +392,5 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
-  }
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-
-    if (index == 1) {
-      // Assuming 'Comparison' is at index 1
-      Navigator.pushNamed(context, '/comparison');
-    }
   }
 }

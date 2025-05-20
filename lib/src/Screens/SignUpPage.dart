@@ -52,9 +52,10 @@ class _SignUpPageState extends State<SignUpPage> {
 Future<void> _register() async {
   if (_formKey.currentState!.validate()) {
     final name = "${_firstNameController.text} ${_lastNameController.text}";
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Registering $name...')),
-    );
+    
+    // Show loading dialog instead of snackbar
+    _showLoadingDialog('Registering $name...');
+    
     try {
       final user = await _auth.signUpWithEmail(
         _emailController.text.trim(),
@@ -72,6 +73,9 @@ Future<void> _register() async {
 
         // Save user data to Firestore using Provider
         await Provider.of<UserProvider>(context, listen: false).addUserToFirestore(newUser);
+
+        // Close loading dialog before showing success dialog
+        Navigator.of(context).pop();
 
         // Show success dialog
         showDialog(
@@ -95,6 +99,9 @@ Future<void> _register() async {
         );
       }
     } catch (e) {
+      // Close loading dialog before showing error
+      Navigator.of(context).pop();
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: ${e.toString()}')),
       );
@@ -300,6 +307,26 @@ Future<void> _register() async {
           validator ??
           (value) =>
               value == null || value.length < 6 ? 'Minimum 6 characters' : null,
+    );
+  }
+  void _showLoadingDialog(String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (_) => Dialog(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(width: 16),
+                  Flexible(child: Text(message)),
+                ],
+              ),
+            ),
+          ),
     );
   }
 }

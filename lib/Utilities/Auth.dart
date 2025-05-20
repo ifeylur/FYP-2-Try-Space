@@ -53,43 +53,42 @@ class Auth {
   }
 
   Future<User?> signInWithGoogle() async {
-    try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return null; // user canceled
+  try {
+    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+    if (googleUser == null) return null; // user canceled
 
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
+    final GoogleSignInAuthentication googleAuth =
+        await googleUser.authentication;
 
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
 
-      final UserCredential userCredential = await _auth.signInWithCredential(
-        credential,
-      );
+    final UserCredential userCredential = await _auth.signInWithCredential(
+      credential,
+    );
 
-      User? firebaseUser = userCredential.user;
+    User? firebaseUser = userCredential.user;
 
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('isLoggedIn', true);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', true);
 
-      final UserModel newUser = UserModel(
-        uid: firebaseUser!.uid,
-        name: firebaseUser.displayName ?? '',
-        email: firebaseUser.email ?? '',
-        profileImageUrl: '',
-      );
+    final UserModel newUser = UserModel(
+      uid: firebaseUser!.uid,
+      name: firebaseUser.displayName ?? '',
+      email: firebaseUser.email ?? '',
+      profileImageUrl: '',
+    );
 
-      await UserProvider().addUserToFirestore(newUser);
+    await UserProvider().addUserToFirestore(newUser);
 
-      return firebaseUser;
-    } catch (error) {
-      print("Google Sign-In error: $error");
-      return null;
-    }
+    return firebaseUser;
+  } catch (error) {
+    print("Google Sign-In error: $error");
+    return null;
   }
-
+}
   Future<void> signOut() async {
     try {
       await GoogleSignIn().signOut(); // Sign out from Google
@@ -103,9 +102,18 @@ class Auth {
       print('Error signing out: $e');
     }
   }
-
+ bool isUserLoggedIn() {
+    return _auth.currentUser != null;
+  }
   // Get the current user
   User? getCurrentUser() {
-    return _auth.currentUser;
+  try {
+    return FirebaseAuth.instance.currentUser;
+  } catch (_) {
+    return null;
+  }
+}
+String? getCurrentUserId() {
+    return _auth.currentUser?.uid;
   }
 }
