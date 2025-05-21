@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:try_space/Utilities/Auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import 'package:try_space/Models/UserModel.dart';
+import 'package:try_space/Providers/UserProvider.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -11,9 +14,6 @@ class Profile extends StatefulWidget {
 
 class _ProfileState extends State<Profile> {
   final Auth _auth = Auth();
-  late User? _currentUser;
-  String _userName = '';
-  String _userEmail = '';
   bool _isLoading = true;
 
   final List<Color> gradientColors = const [
@@ -32,12 +32,11 @@ class _ProfileState extends State<Profile> {
       _isLoading = true;
     });
 
-    _currentUser = FirebaseAuth.instance.currentUser;
+    final User? currentUser = FirebaseAuth.instance.currentUser;
     
-    if (_currentUser != null) {
-      // Get display name (if set) or use a default
-      _userName = _currentUser!.displayName ?? 'User';
-      _userEmail = _currentUser!.email ?? 'No email found';
+    if (currentUser != null) {
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      await userProvider.fetchUser(currentUser.uid);
     }
 
     setState(() {
@@ -75,43 +74,52 @@ class _ProfileState extends State<Profile> {
         padding: const EdgeInsets.all(20.0),
         child: _isLoading 
           ? const Center(child: CircularProgressIndicator(color: Colors.white))
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildProfileHeader(),
-                const SizedBox(height: 30),
-                _buildButton(
-                  icon: Icons.edit,
-                  label: 'Edit Profile',
-                  onTap: () => Navigator.pushNamed(context, '/editprofile'),
-                ),
-                _buildButton(
-                  icon: Icons.settings,
-                  label: 'Settings',
-                  onTap: () => Navigator.pushNamed(context, '/settings'),
-                ),
-                _buildButton(
-                  icon: Icons.info_outline,
-                  label: 'About Us',
-                  onTap: () => Navigator.pushNamed(context, '/about'),
-                ),
-                const Spacer(),
-                _buildButton(
-                  icon: Icons.logout,
-                  label: 'Sign Out',
-                  color: const Color.fromARGB(255, 255, 17, 0),
-                  onTap: () async {
-                    await _auth.signOut();
-                    Navigator.pushReplacementNamed(context, '/login');
-                  },
-                ),
-              ],
+          : Consumer<UserProvider>(
+              builder: (context, userProvider, _) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildProfileHeader(),
+                    const SizedBox(height: 30),
+                    _buildButton(
+                      icon: Icons.edit,
+                      label: 'Edit Profile',
+                      onTap: () => Navigator.pushNamed(context, '/editprofile'),
+                    ),
+                    _buildButton(
+                      icon: Icons.settings,
+                      label: 'Settings',
+                      onTap: () => Navigator.pushNamed(context, '/settings'),
+                    ),
+                    _buildButton(
+                      icon: Icons.info_outline,
+                      label: 'About Us',
+                      onTap: () => Navigator.pushNamed(context, '/about'),
+                    ),
+                    const Spacer(),
+                    _buildButton(
+                      icon: Icons.logout,
+                      label: 'Sign Out',
+                      color: const Color.fromARGB(255, 255, 17, 0),
+                      onTap: () async {
+                        await _auth.signOut();
+                        // Clear user data in provider
+                        Provider.of<UserProvider>(context, listen: false).clearUser();
+                        Navigator.pushReplacementNamed(context, '/login');
+                      },
+                    ),
+                  ],
+                );
+              },
             ),
       ),
     );
   }
 
   Widget _buildProfileHeader() {
+    final userProvider = Provider.of<UserProvider>(context);
+    final UserModel? user = userProvider.user;
+    
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -129,19 +137,30 @@ class _ProfileState extends State<Profile> {
               shape: BoxShape.circle,
               border: Border.all(color: Colors.white, width: 2),
             ),
-            child: Center(
-              child: Icon(
-                Icons.person,
-                size: 60,
-                color: Colors.white,
-              ),
-            ),
+            child: user?.profileImageUrl != null && user!.profileImageUrl.isNotEmpty
+              ? ClipOval(
+                  child: Image.network(
+                    user.profileImageUrl,
+                    fit: BoxFit.cover,
+                    width: 100,
+                    height: 100,
+                    errorBuilder: (context, error, stackTrace) => 
+                      const Icon(Icons.person, size: 60, color: Colors.white),
+                  ),
+                )
+              : const Center(
+                  child: Icon(
+                    Icons.person,
+                    size: 60,
+                    color: Colors.white,
+                  ),
+                ),
           ),
           const SizedBox(height: 16),
           
           // User Name
           Text(
-            _userName,
+            user?.name ?? 'User',
             style: const TextStyle(
               color: Colors.white,
               fontSize: 24,
@@ -152,7 +171,7 @@ class _ProfileState extends State<Profile> {
           
           // User Email
           Text(
-            _userEmail,
+            user?.email ?? 'No email found',
             style: TextStyle(
               color: Colors.white.withOpacity(0.8),
               fontSize: 16,
