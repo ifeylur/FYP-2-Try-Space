@@ -21,6 +21,10 @@ class _ProfileState extends State<Profile> {
     Color(0xFFFF5F6D),
     Color(0xFFFFC371),
   ];
+  
+  // Define container and button colors
+  final Color profileContainerColor = Colors.white.withOpacity(0.2);
+  final Color buttonBackgroundColor = Colors.white.withOpacity(0.3);
 
   @override
   void initState() {
@@ -124,8 +128,8 @@ class _ProfileState extends State<Profile> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(15),
+        color: profileContainerColor,
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
         children: [
@@ -214,16 +218,24 @@ class _ProfileState extends State<Profile> {
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: ElevatedButton.icon(
+      child: ElevatedButton(
         onPressed: onTap,
-        icon: Icon(icon, color: color),
-        label: Text(label, style: TextStyle(color: color)),
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white.withOpacity(0.2),
+          backgroundColor: buttonBackgroundColor,
           padding: const EdgeInsets.symmetric(vertical: 16),
           alignment: Alignment.centerLeft,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15.0),
+          child: Row(
+            children: [
+              Icon(icon, color: color),
+              const SizedBox(width: 15),
+              Text(label, style: TextStyle(color: color)),
+            ],
           ),
         ),
       ),

@@ -51,7 +51,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: AppBar(automaticallyImplyLeading: false,
         title: const Text("Compare Outfits",style: TextStyle(color: Colors.white),),
         centerTitle: true,
         flexibleSpace: Container(
