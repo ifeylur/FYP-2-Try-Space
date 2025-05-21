@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'package:try_space/Utilities/Auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:try_space/src/Screens/NavBar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -17,7 +15,6 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
-  final Auth _auth = Auth();
 
   final List<List<Color>> vibrantGradients = [
     [Color(0xFFFF5F6D), Color(0xFFFFC371)],
@@ -75,9 +72,8 @@ class _SplashScreenState extends State<SplashScreen>
     final user = await FirebaseAuth.instance.authStateChanges().first;
 
     if (isLoggedIn && user != null) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const NavBar()),
+      Navigator.pushReplacementNamed(
+        context,'/navbar'
       );
     } else {
       await prefs.setBool('isLoggedIn', false);

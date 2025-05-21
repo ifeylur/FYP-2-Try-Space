@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:try_space/Utilities/Auth.dart';
 import 'dart:io' show File;
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
 import 'package:try_space/src/Screens/ResultScreen.dart';
 import 'package:provider/provider.dart';
@@ -20,7 +18,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final ImagePicker _picker = ImagePicker();
-  final Auth _auth = Auth();
   File? _userImage;
   File? _garmentImage;
   bool _isProcessing = false;
@@ -190,7 +187,7 @@ class _HomePageState extends State<HomePage> {
       
       if (status.isGranted) {
         // Convert base64 to bytes
-        final Uint8List bytes = base64Decode(base64Image);
+        // final Uint8List bytes = base64Decode(base64Image);
         
         // Save to gallery
         // final result = await ImageGallerySaver.saveImage(

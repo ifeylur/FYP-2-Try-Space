@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
-import 'package:provider/provider.dart';
-import 'package:try_space/Providers/TryOnResultProvider.dart';
 
 class TryOnScreen extends StatelessWidget {
   final String resultId;

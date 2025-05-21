@@ -131,14 +131,14 @@ Future<void> _register() async {
                 children: [
                   Align(
                     alignment: Alignment.topLeft,
-                    child: IconButton(
+                    child: IconButton(padding: EdgeInsets.only(bottom: 60),
                       icon: Icon(
                         Icons.arrow_back,
                         color: Colors.white,
                         size: 28,
                       ),
                       onPressed: () {
-                        Navigator.pop(context);
+                        Navigator.pushReplacementNamed(context, '/register');
                       },
                     ),
                   ),

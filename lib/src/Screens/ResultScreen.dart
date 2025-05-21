@@ -9,7 +9,6 @@ import 'package:uuid/uuid.dart';
 import 'package:try_space/Models/TryOnResultModel.dart';
 import 'package:try_space/Providers/TryOnResultProvider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart'; // Add this package
 
 class ResultScreen extends StatefulWidget {
   final File userImage;
