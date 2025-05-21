@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:try_space/Utilities/Auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
@@ -139,14 +140,7 @@ class _ProfileState extends State<Profile> {
             ),
             child: user?.profileImageUrl != null && user!.profileImageUrl.isNotEmpty
               ? ClipOval(
-                  child: Image.network(
-                    user.profileImageUrl,
-                    fit: BoxFit.cover,
-                    width: 100,
-                    height: 100,
-                    errorBuilder: (context, error, stackTrace) => 
-                      const Icon(Icons.person, size: 60, color: Colors.white),
-                  ),
+                  child: _buildProfileImage(user.profileImageUrl),
                 )
               : const Center(
                   child: Icon(
@@ -180,6 +174,36 @@ class _ProfileState extends State<Profile> {
         ],
       ),
     );
+  }
+
+  Widget _buildProfileImage(String imageData) {
+    // Check if the image is a base64 string
+    if (imageData.startsWith('http')) {
+      // It's a URL
+      return Image.network(
+        imageData,
+        fit: BoxFit.cover,
+        width: 100,
+        height: 100,
+        errorBuilder: (context, error, stackTrace) => 
+          const Icon(Icons.person, size: 60, color: Colors.white),
+      );
+    } else {
+      // It's a base64 string
+      try {
+        return Image.memory(
+          base64Decode(imageData),
+          fit: BoxFit.cover,
+          width: 100,
+          height: 100,
+          errorBuilder: (context, error, stackTrace) => 
+            const Icon(Icons.person, size: 60, color: Colors.white),
+        );
+      } catch (e) {
+        debugPrint('Error decoding base64 image: $e');
+        return const Icon(Icons.person, size: 60, color: Colors.white);
+      }
+    }
   }
 
   Widget _buildButton({

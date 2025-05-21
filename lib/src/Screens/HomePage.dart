@@ -381,7 +381,7 @@ class _HomePageState extends State<HomePage> {
     final userResults = Provider.of<TryOnResultProvider>(context).userResults;
     
     return Scaffold(
-      appBar: AppBar(
+      appBar: AppBar(automaticallyImplyLeading: false,
         title: const Text('Dashboard', style: TextStyle(color: Colors.white)),
         centerTitle: true,
         flexibleSpace: Container(
