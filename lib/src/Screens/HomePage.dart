@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:try_space/Utilities/Auth.dart';
 import 'dart:io' show File;
+import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
 import 'package:try_space/src/Screens/ResultScreen.dart';
+import 'package:provider/provider.dart';
+import 'package:try_space/Providers/TryOnResultProvider.dart';
+import 'package:try_space/Models/TryOnResultModel.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -17,6 +21,7 @@ class _HomePageState extends State<HomePage> {
   File? _userImage;
   File? _garmentImage;
   bool _isProcessing = false;
+  bool _isLoading = true;
   int _currentIndex = 0;
 
   // Define the gradient colors
@@ -24,6 +29,30 @@ class _HomePageState extends State<HomePage> {
     Color(0xFFFF5F6D),
     Color(0xFFFFC371),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserResults();
+  }
+
+  Future<void> _loadUserResults() async {
+    setState(() {
+      _isLoading = true;
+    });
+    
+    try {
+      await Provider.of<TryOnResultProvider>(context, listen: false).fetchUserResults();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load results: $e')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   Future<void> _selectUserImage() async {
     showModalBottomSheet(
@@ -143,12 +172,17 @@ class _HomePageState extends State<HomePage> {
                 garmentImage: _garmentImage!,
               ),
         ),
-      );
+      ).then((_) {
+        // Refresh results when returning from the ResultScreen
+        _loadUserResults();
+      });
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final userResults = Provider.of<TryOnResultProvider>(context).userResults;
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard', style: TextStyle(color: Colors.white)),
@@ -300,17 +334,23 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(height: 15),
                 SizedBox(
                   height: 120,
-                  child: ListView(
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                    scrollDirection: Axis.horizontal,
-                    children: [
-                      _buildCategoryCard('Try-On 1', Icons.checkroom),
-                      _buildCategoryCard('Try-On 1', Icons.checkroom),
-                      _buildCategoryCard('Try-On 1', Icons.checkroom),
-                      _buildCategoryCard('Try-On 1', Icons.checkroom),
-                      _buildCategoryCard('Try-On 1', Icons.checkroom),
-                    ],
-                  ),
+                  child: _isLoading 
+                    ? const Center(child: CircularProgressIndicator())
+                    : userResults.isEmpty
+                      ? Center(
+                          child: Text(
+                            'No try-on results yet',
+                            style: TextStyle(color: Colors.grey[600]),
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 15),
+                          scrollDirection: Axis.horizontal,
+                          itemCount: userResults.length,
+                          itemBuilder: (context, index) {
+                            return _buildResultCard(userResults[index]);
+                          },
+                        ),
                 ),
                 const SizedBox(height: 20),
               ],
@@ -320,6 +360,71 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+  
+  Widget _buildResultCard(TryOnResultModel result) {
+    try {
+      // Decode base64 image
+      final String completeBase64 = result.isChunked 
+        ? result.getCompleteImage() 
+        : result.resultImage;
+    
+    // Decode base64 image
+    final imageBytes = base64Decode(completeBase64);
+      
+      return Container(
+        width: 100,
+        margin: const EdgeInsets.symmetric(horizontal: 5),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              spreadRadius: 1,
+              blurRadius: 5,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                child: Image.memory(
+                  imageBytes,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  gaplessPlayback: true, // Prevents flickering during loading
+                  errorBuilder: (context, error, stackTrace) {
+                    // Fallback if image can't be displayed
+                    return Container(
+                      color: Colors.grey[200],
+                      child: Icon(Icons.broken_image, color: Colors.grey[400]),
+                    );
+                  },
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                result.title,
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      print("Error displaying result card: $e");
+      // Fallback if image loading fails
+      return _buildCategoryCard(result.title, Icons.checkroom);
+    }
+  }
+
   Widget _buildImageSelector(
     String title,
     File? image,

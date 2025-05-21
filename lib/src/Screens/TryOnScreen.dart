@@ -127,21 +127,6 @@ class TryOnScreen extends StatelessWidget {
             ),
             TextButton(
               onPressed: () {
-                // Delete the result
-                Provider.of<TryOnResultProvider>(context, listen: false)
-                    .deleteResult(resultId);
-                
-                // Close dialog and navigate back
-                Navigator.pop(context); // Close dialog
-                Navigator.pop(context); // Go back to previous screen
-                
-                // Show success message
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Try-on result deleted'),
-                    backgroundColor: Colors.orange,
-                  ),
-                );
               },
               child: const Text('Delete', style: TextStyle(color: Colors.red)),
             ),

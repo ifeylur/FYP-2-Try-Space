@@ -1,48 +1,70 @@
-import 'dart:convert';
 import 'dart:io';
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class TryOnResultModel {
   final String id;
-  final String resultImageBase64;
+  final String resultImage; // Base64 image or first chunk
+  final List<String> imageChunks; // Additional chunks if image is large
   final String userId;
   final String title;
+  final bool isChunked; // Indicates if the image is split into chunks
+  final DateTime? createdAt;
 
   TryOnResultModel({
     required this.id,
-    required this.resultImageBase64,
+    required this.resultImage,
+    this.imageChunks = const [],
     required this.userId,
     this.title = 'Try-On Result',
+    this.isChunked = false,
+    this.createdAt,
   });
-
-  // Convert File to base64 encoded string
-  static Future<String> fileToBase64(File file) async {
-    final bytes = await file.readAsBytes();
-    return base64Encode(bytes);
-  }
-
-  // Convert base64 string back to File (for display purposes)
-  static Future<File> base64ToFile(String base64String, String filePath) async {
-    final bytes = base64Decode(base64String);
-    final file = File(filePath);
-    await file.writeAsBytes(bytes);
-    return file;
-  }
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
-      'resultImageBase64': resultImageBase64,
+      'resultImage': resultImage,
+      'imageChunks': imageChunks,
       'userId': userId,
       'title': title,
+      'isChunked': isChunked,
+      // Don't include id in the map as it will be the document ID
+      // Don't include createdAt as it will be set by the server
     };
   }
 
   factory TryOnResultModel.fromMap(Map<String, dynamic> map) {
+    // Handle timestamp conversion safely
+    DateTime? createdAtDate;
+    if (map['createdAt'] != null) {
+      if (map['createdAt'] is Timestamp) {
+        createdAtDate = (map['createdAt'] as Timestamp).toDate();
+      }
+    }
+    
     return TryOnResultModel(
       id: map['id'],
-      resultImageBase64: map['resultImageBase64'],
-      userId: map['userId'],
+      resultImage: map['resultImage'] ?? '',
+      imageChunks: map['imageChunks'] != null
+          ? List<String>.from(map['imageChunks'])
+          : [],
+      userId: map['userId'] ?? '',
       title: map['title'] ?? 'Try-On Result',
+      isChunked: map['isChunked'] ?? false,
+      createdAt: createdAtDate,
     );
+  }
+  
+  // Helper method to get the complete image
+  String getCompleteImage() {
+    if (!isChunked || imageChunks.isEmpty) return resultImage;
+    
+    try {
+      return resultImage + imageChunks.join();
+    } catch (e) {
+      print("Error combining image chunks: $e");
+      return resultImage; // Return at least the first chunk if there's an error
+    }
   }
 }

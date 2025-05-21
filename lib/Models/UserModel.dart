@@ -28,4 +28,6 @@ class UserModel {
       profileImageUrl: map['profileImageUrl'],
     );
   }
+
+  
 }

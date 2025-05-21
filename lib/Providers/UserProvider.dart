@@ -8,7 +8,6 @@ class UserProvider with ChangeNotifier {
   UserModel? _user;
   UserModel? get user => _user;
 
-  /// Fetch user data by UID
   Future<void> fetchUser(String uid) async {
     try {
       final doc = await _firestore.collection('users').doc(uid).get();
@@ -21,54 +20,38 @@ class UserProvider with ChangeNotifier {
     }
   }
 
-  /// Add new user to Firestore
   Future<void> addUserToFirestore(UserModel user) async {
     await _firestore.collection('users').doc(user.uid).set(user.toMap());
+    _user = user;
     notifyListeners();
   }
 
-  /// Create or update user (overwrite)
   Future<void> saveUser(UserModel userModel) async {
-    try {
-      await _firestore
-          .collection('users')
-          .doc(userModel.uid)
-          .set(userModel.toMap());
-
-      _user = userModel;
-      notifyListeners();
-    } catch (e) {
-      debugPrint('Error saving user: $e');
-    }
+    await _firestore.collection('users').doc(userModel.uid).set(userModel.toMap());
+    _user = userModel;
+    notifyListeners();
   }
 
-  /// Update user's name and optionally profileImageUrl
+  /// ✅ Unified method to update profile
   Future<void> updateUserProfile({
     required String name,
-    String? profileImageUrl,
+    required String profileImageUrl,
   }) async {
-    if (_user == null) {
-      debugPrint('No user loaded to update');
-      return;
-    }
+    if (_user == null) return;
 
     try {
       final docRef = _firestore.collection('users').doc(_user!.uid);
 
-      Map<String, dynamic> updateData = {'name': name};
-      if (profileImageUrl != null && profileImageUrl.isNotEmpty) {
-        updateData['profileImageUrl'] = profileImageUrl;
-      }
+      await docRef.update({
+        'name': name,
+        'profileImageUrl': profileImageUrl,
+      });
 
-      // Update Firestore document partially
-      await docRef.update(updateData);
-
-      // Update local user model and notify listeners
       _user = UserModel(
         uid: _user!.uid,
         name: name,
         email: _user!.email,
-        profileImageUrl: profileImageUrl ?? _user!.profileImageUrl,
+        profileImageUrl: profileImageUrl,
       );
 
       notifyListeners();
@@ -78,7 +61,6 @@ class UserProvider with ChangeNotifier {
     }
   }
 
-  /// Clear user data
   void clearUser() {
     _user = null;
     notifyListeners();
