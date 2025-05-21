@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:try_space/Utilities/Auth.dart';
 import 'dart:io' show File;
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
 import 'package:try_space/src/Screens/ResultScreen.dart';
 import 'package:provider/provider.dart';
 import 'package:try_space/Providers/TryOnResultProvider.dart';
 import 'package:try_space/Models/TryOnResultModel.dart';
+// import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -177,6 +180,200 @@ class _HomePageState extends State<HomePage> {
         _loadUserResults();
       });
     });
+  }
+
+  // Function to save image to gallery
+  Future<void> _saveToGallery(String base64Image, String title) async {
+    try {
+      // Check if permission is granted
+      final status = await Permission.storage.request();
+      
+      if (status.isGranted) {
+        // Convert base64 to bytes
+        final Uint8List bytes = base64Decode(base64Image);
+        
+        // Save to gallery
+        // final result = await ImageGallerySaver.saveImage(
+        //   bytes,
+        //   quality: 100,
+        //   name: '${title}_${DateTime.now().millisecondsSinceEpoch}',
+        // );
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Image saved to gallery')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Permission denied to save image')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save image: $e')),
+      );
+    }
+  }
+
+  // Function to show image preview with options
+  void _showImagePreview(TryOnResultModel result) {
+    try {
+      // Decode base64 image
+      final String completeBase64 = result.isChunked 
+        ? result.getCompleteImage() 
+        : result.resultImage;
+      
+      final imageBytes = base64Decode(completeBase64);
+      
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            elevation: 0,
+            backgroundColor: Colors.transparent,
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(20),
+                    ),
+                    child: Image.memory(
+                      imageBytes,
+                      fit: BoxFit.contain,
+                      gaplessPlayback: true,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          height: 200,
+                          color: Colors.grey[200],
+                          child: Icon(Icons.broken_image, color: Colors.grey[400], size: 50),
+                        );
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      result.title,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0, left: 16.0, right: 16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.delete, color: Colors.white),
+                            label: const Text('Delete', style: TextStyle(color: Colors.white)),
+                            onPressed: () async {
+                              Navigator.of(context).pop();
+                              
+                              // Show confirmation dialog
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Delete Result'),
+                                  content: const Text('Are you sure you want to delete this try-on result?'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.of(context).pop(),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () async {
+                                        Navigator.of(context).pop();
+                                        
+                                        // Show loading indicator
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Deleting...'),
+                                            duration: Duration(seconds: 1),
+                                          ),
+                                        );
+                                        
+                                        try {
+                                          await Provider.of<TryOnResultProvider>(context, listen: false)
+                                            .deleteTryOnResult(result.id);
+                                            
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text('Result deleted successfully')),
+                                          );
+                                        } catch (e) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text('Failed to delete: $e')),
+                                          );
+                                        }
+                                      },
+                                      child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.save_alt, color: Colors.white),
+                            label: const Text('Save', style: TextStyle(color: Colors.white)),
+                            onPressed: () async {
+                              Navigator.of(context).pop();
+                              
+                              // Show loading indicator
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Saving to gallery...'),
+                                  duration: Duration(seconds: 1),
+                                ),
+                              );
+                              
+                              await _saveToGallery(completeBase64, result.title);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: gradientColors[0],
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    } catch (e) {
+      print("Error displaying image preview: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error displaying image: $e')),
+      );
+    }
   }
 
   @override
@@ -368,54 +565,60 @@ class _HomePageState extends State<HomePage> {
         ? result.getCompleteImage() 
         : result.resultImage;
     
-    // Decode base64 image
-    final imageBytes = base64Decode(completeBase64);
+      // Decode base64 image
+      final imageBytes = base64Decode(completeBase64);
       
-      return Container(
-        width: 100,
-        margin: const EdgeInsets.symmetric(horizontal: 5),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
-              spreadRadius: 1,
-              blurRadius: 5,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Expanded(
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
-                child: Image.memory(
-                  imageBytes,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  gaplessPlayback: true, // Prevents flickering during loading
-                  errorBuilder: (context, error, stackTrace) {
-                    // Fallback if image can't be displayed
-                    return Container(
-                      color: Colors.grey[200],
-                      child: Icon(Icons.broken_image, color: Colors.grey[400]),
-                    );
-                  },
+      return GestureDetector(
+        onTap: () => _showImagePreview(result),
+        child: Container(
+          width: 100,
+          margin: const EdgeInsets.symmetric(horizontal: 5),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.2),
+                spreadRadius: 1,
+                blurRadius: 5,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Expanded(
+                child: Hero(
+                  tag: 'tryonresult_${result.id}',
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                    child: Image.memory(
+                      imageBytes,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      gaplessPlayback: true, // Prevents flickering during loading
+                      errorBuilder: (context, error, stackTrace) {
+                        // Fallback if image can't be displayed
+                        return Container(
+                          color: Colors.grey[200],
+                          child: Icon(Icons.broken_image, color: Colors.grey[400]),
+                        );
+                      },
+                    ),
+                  ),
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Text(
-                result.title,
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  result.title,
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
     } catch (e) {
